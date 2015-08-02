@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<script src= "https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.min.js"></script>
+<body>
+
+    <div ng-app="osa-app" ng-controller="members">
+
+        <ul>
+            <li ng-repeat="x in names">
+                {{ x.firstName + ", " + x.lastName }}
+            </li>
+        </ul>
+
+    </div>
+
+    <script>
+        var app = angular.module("osa-app", []);
+        app.controller("members", function($scope, $http, $window) {
+
+            $http.get("api/v1.0/members")
+              .then( function(response) {
+                // this callback will be called asynchronously
+                // when the response is available
+
+                if (typeof response.data !== "object") {
+                    $window.location = "/api/v1.0/login?continue=" + $window.location.pathname;
+                    return
+                }
+
+                $scope.names = response.data;
+
+              }, function(response) {
+                // called asynchronously if an error occurs
+                // or server returns response with an error status.
+                    $window.location = "/api/v1.0/login?continue=" + $window.location.pathname;
+              });
+
+        });
+    </script>
+
+</body>
+</html>
