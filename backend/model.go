@@ -24,7 +24,8 @@ type event struct {
 }
 
 type member struct {
-	Family       int64
+	Account      string
+	Family       string
 	Primary      bool
 	Active       bool
 	Gender       bool
@@ -91,12 +92,16 @@ type timeRange struct {
 }
 
 type eventSignup struct {
-	Event    int64
+	Event    string
 	Comments string
 	Time     time.Time
 }
 
 type logData struct {
 	Modified   time.Time
-	ModifiedBy int64
+	ModifiedBy string
+}
+
+type errorJSON struct {
+	Error string
 }

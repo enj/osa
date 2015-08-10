@@ -5,7 +5,7 @@ api_version: go1
 
 handlers:
 
-- url: /api/v1.0/members
+- url: /api/v1.0/event_signup
   script: _go_app
   login: required
 
