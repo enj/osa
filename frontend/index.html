@@ -7,7 +7,9 @@
 
         <ul>
             <li ng-repeat="x in names">
-                {{ x.firstName + ", " + x.lastName }}
+	        {{ x.Name.First + " " + x.Name.Last }}
+		<br/>
+		{{ x.Contact.Email.Primary }}
             </li>
         </ul>
 

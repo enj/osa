@@ -14,16 +14,13 @@ var (
 	e = wrapMux()
 )
 
-type Member struct {
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-}
-
 // some middleware / handlers
 func wrapMux() *echo.Echo {
 
 	// Echo instance
 	e := echo.New()
+
+	// Add CORS middleware
 
 	// Routes
 	e.Get("/api/v1.0/add", add)
@@ -44,7 +41,7 @@ func members(c *echo.Context) error {
 
 	// To retrieve the results,
 	// you must execute the Query using its GetAll or Run methods.
-	var people []Member
+	var people []member
 	_, err := q.GetAll(ac, &people)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
@@ -86,22 +83,21 @@ func init() {
 func add(c *echo.Context) error {
 	ac := appengine.NewContext(c.Request())
 
-	m := Member{
-		FirstName: "Joe Citizen24",
-		LastName:  "Manager24",
-	}
+	m := member{}
+	m.Events = []eventSignup{eventSignup{}, eventSignup{}}
+	m.Office = []officeBearer{officeBearer{}, officeBearer{}}
+	m.Contact.Phone = []phone{phone{}, phone{}}
+	m.Contact.Address = []address{address{}, address{}}
 
-	_, err := datastore.Put(ac, datastore.NewIncompleteKey(ac, "member", nil), &m)
+	key, err := datastore.Put(ac, datastore.NewIncompleteKey(ac, "member", nil), &m)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 
-	return c.JSON(http.StatusOK, nil)
+	var m2 member
+	if err = datastore.Get(ac, key, &m2); err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
 
-	// var e2 Employee
-	// if err = datastore.Get(c, key, &e2); err != nil {
-	//     http.Error(w, err.Error(), http.StatusInternalServerError)
-	//     return
-	// }
-
+	return c.JSON(http.StatusOK, m2)
 }
