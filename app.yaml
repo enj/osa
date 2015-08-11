@@ -9,6 +9,10 @@ handlers:
   script: _go_app
   login: required
 
+- url: /api/v1.0/user_events
+  script: _go_app
+  login: required
+
 - url: /api/.*
   script: _go_app
 

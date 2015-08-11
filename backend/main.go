@@ -29,6 +29,7 @@ func wrapMux() *echo.Echo {
 	e.Get("/api/v1.0/add", add)
 	e.Get("/api/v1.0/members", members)
 	e.Get("/api/v1.0/events", allEvents)
+	e.Get("/api/v1.0/user_events", userEvents)
 	e.Get("/api/v1.0/login", login)
 	e.Get("/api/v1.0/logout", logout)
 	e.Post("/api/v1.0/event_signup", memberEventSignup)
@@ -136,6 +137,15 @@ func allEvents(c *echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, events)
+}
+
+func userEvents(c *echo.Context) error {
+	ac := appengine.NewContext(c.Request())
+	m, _ := getOrCreateMember(ac)
+	if m.Events == nil || len(m.Events) == 0 {
+		c.JSON(http.StatusOK, errorJSON{"no events"})
+	}
+	return c.JSON(http.StatusOK, m.Events)
 }
 
 func getOrCreateMember(ac context.Context) (member, *datastore.Key) {
