@@ -96,7 +96,7 @@ func memberEventSignup(c *echo.Context) error {
 	e := event{}
 	eventKey := datastore.NewKey(ac, "event", eventName, 0, nil)
 	if err := datastore.Get(ac, eventKey, &e); err != nil {
-		return c.JSON(http.StatusBadRequest, errorJSON{"Invalid event name"})
+		return c.JSON(http.StatusBadRequest, errorJSON{err.Error()})
 	}
 	// TODO do more validation here like seeing if event is still active
 	comments := c.Form("comments")
@@ -106,7 +106,7 @@ func memberEventSignup(c *echo.Context) error {
 		Filter("Events.Event =", eventName)
 	count, err := q.Count(ac)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, errorJSON{"db error"})
+		return c.JSON(http.StatusInternalServerError, errorJSON{err.Error()})
 	}
 	alreadySignedUp := count != 0 //TODO redo data model to fix this?
 	if alreadySignedUp {
@@ -116,7 +116,7 @@ func memberEventSignup(c *echo.Context) error {
 		m.Events = append(m.Events, eventDetails)
 		_, err := datastore.Put(ac, k, &m)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, errorJSON{"db error"})
+			return c.JSON(http.StatusInternalServerError, errorJSON{err.Error()})
 		}
 		return c.NoContent(http.StatusOK)
 	}
