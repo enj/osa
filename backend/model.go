@@ -5,6 +5,8 @@ import (
 )
 
 type family struct {
+	// Same as key
+	// Makes it easier to display all families
 	Name    string
 	Keyword string
 	Email   string
@@ -15,6 +17,8 @@ type family struct {
 }
 
 type event struct {
+	// Same as key
+	// Makes its easier to display all events
 	Title       string
 	Description string
 	Location    location
@@ -24,8 +28,9 @@ type event struct {
 }
 
 type member struct {
-	Account      string
-	Family       string
+	//TODO figure out how to make ancestor
+	//May be an issue since this can't be changed after creation
+	//Family       string
 	Primary      bool
 	Active       bool
 	Gender       bool
@@ -34,8 +39,8 @@ type member struct {
 	Modified     time.Time
 	Name         name
 	Contact      contact
-	Events       []eventSignup
-	Office       []officeBearer
+	//Events       []eventSignup
+	Office []officeBearer
 }
 
 type name struct {
@@ -92,9 +97,11 @@ type timeRange struct {
 }
 
 type eventSignup struct {
-	Event    string
-	Comments string
-	Time     time.Time
+	// Same as key
+	// Makes it easier to display all event signups
+	EventTitle string
+	Comments   string
+	Time       time.Time
 }
 
 type logData struct {

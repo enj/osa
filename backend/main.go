@@ -47,13 +47,14 @@ func members(c *echo.Context) error {
 
 	// To retrieve the results,
 	// you must execute the Query using its GetAll or Run methods.
-	var people []member
-	_, err := q.GetAll(ac, &people)
+	var members []member
+	_, err := q.GetAll(ac, &members)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, responseJSON{"", err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, people)
+	// This will return a JSON null if there are no members
+	return c.JSON(http.StatusOK, members)
 }
 
 func login(c *echo.Context) error {
@@ -93,28 +94,46 @@ func memberEventSignup(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, responseJSON{"", "Missing event name"})
 	}
 	ac := appengine.NewContext(c.Request())
-	e := event{}
 	eventKey := datastore.NewKey(ac, "event", eventName, 0, nil)
-	if err := datastore.Get(ac, eventKey, &e); err != nil {
-		return c.JSON(http.StatusBadRequest, responseJSON{"", err.Error()})
-	}
+
 	// TODO do more validation here like seeing if event is still active
-	comments := c.Form("comments")
-	m, k := getOrCreateMember(ac)
-	q := datastore.NewQuery("member").
-		Filter("__key__ =", k).
-		Filter("Events.Event =", eventName)
+	q := datastore.NewQuery("event").
+		Filter("__key__ =", eventKey)
+
 	count, err := q.Count(ac)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, responseJSON{"", err.Error()})
 	}
-	alreadySignedUp := count != 0 //TODO redo data model to fix this?
-	if alreadySignedUp {
+	if count != 1 {
+		return c.JSON(http.StatusBadRequest, responseJSON{"", "Invalid event"})
+	}
+
+	comments := c.Form("comments")
+
+	// TODO determine best time to cause creation of "member"
+	//m := member{}
+	//k, err := getOrCreateMember(ac, &m)
+	//if err != nil {
+	//	return c.JSON(http.StatusInternalServerError, responseJSON{"", err.Error()})
+	//}
+
+	// Use this member's key as parent of the event signup (even if the member does not yet exist)
+	k, _ := getOrCreateMember(ac, nil) // Error checking not needed when m is nil
+
+	eventSignupKey := datastore.NewKey(ac, "event_signup", eventName, 0, k)
+	q = datastore.NewQuery("event_signup").
+		Ancestor(k).
+		Filter("__key__ =", eventSignupKey)
+	count, err = q.Count(ac)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, responseJSON{"", err.Error()})
+	}
+
+	if count == 1 {
 		return c.JSON(http.StatusBadRequest, responseJSON{"", "Already signed up"})
 	} else {
-		eventDetails := eventSignup{e.Title, comments, time.Now()}
-		m.Events = append(m.Events, eventDetails)
-		_, err := datastore.Put(ac, k, &m)
+		eventSignupDetails := eventSignup{eventName, comments, time.Now()}
+		_, err = datastore.Put(ac, eventSignupKey, &eventSignupDetails)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, responseJSON{"", err.Error()})
 		}
@@ -141,28 +160,43 @@ func allEvents(c *echo.Context) error {
 
 func userEvents(c *echo.Context) error {
 	ac := appengine.NewContext(c.Request())
-	m, _ := getOrCreateMember(ac)
-	if m.Events == nil || len(m.Events) == 0 {
-		c.JSON(http.StatusOK, responseJSON{"", "no events"})
+	k, _ := getOrCreateMember(ac, nil) //Don't need to check for DB errors when m is nil
+
+	// TODO turn this into a query that actually gets the events, not the signups
+	// the signups should be used as a key search
+	// Determine how to do that efficiently
+	// Then remove the EventTitle from the signup
+	var events []eventSignup
+	q := datastore.NewQuery("event_signup").Ancestor(k)
+	_, err := q.GetAll(ac, &events)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, responseJSON{"", err.Error()})
 	}
-	return c.JSON(http.StatusOK, m.Events)
+
+	if events == nil || len(events) == 0 {
+		return c.JSON(http.StatusOK, responseJSON{"no events", ""})
+	}
+
+	return c.JSON(http.StatusOK, events)
 }
 
-func getOrCreateMember(ac context.Context) (member, *datastore.Key) {
-	var m member
+func getOrCreateMember(ac context.Context, m *member) (key *datastore.Key, err error) {
 	u := user.Current(ac)
-	id := u.ID
-	key := datastore.NewKey(ac, "member", id, 0, nil)
-	err := datastore.Get(ac, key, &m)
-	if err != nil {
-		m2 := member{}
-		m2.Account = id
-		m2.Contact.Email.Primary = u.Email
-		m2.Modified = time.Now()
-		datastore.Put(ac, key, &m2) //TODO check for error?
-		return m2, key
+	key = datastore.NewKey(ac, "member", u.ID, 0, nil)
+
+	// If no member is provided, then we only cared about having the key
+	if m == nil {
+		return
 	}
-	return m, key
+
+	if err = datastore.Get(ac, key, m); err != nil {
+		// Assumes the m is not modified when key does not exist
+		m.Contact.Email.Primary = u.Email
+		m.Modified = time.Now()
+		_, err = datastore.Put(ac, key, m)
+	}
+
+	return
 }
 
 func add(c *echo.Context) error {
