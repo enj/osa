@@ -102,6 +102,7 @@ type logData struct {
 	ModifiedBy string
 }
 
-type errorJSON struct {
-	Error string
+type responseJSON struct {
+	Message string `json:"message,omitempty"`
+	Error   string `json:"error,omitempty"`
 }

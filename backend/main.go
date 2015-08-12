@@ -50,7 +50,7 @@ func members(c *echo.Context) error {
 	var people []member
 	_, err := q.GetAll(ac, &people)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, errorJSON{err.Error()})
+		return c.JSON(http.StatusInternalServerError, responseJSON{"", err.Error()})
 	}
 
 	return c.JSON(http.StatusOK, people)
@@ -90,13 +90,13 @@ func memberEventSignup(c *echo.Context) error {
 	// TODO redo this to run in a transaction since it needs to be atomic
 	eventName := c.Form("event")
 	if eventName == "" {
-		return c.JSON(http.StatusBadRequest, errorJSON{"Missing event name"})
+		return c.JSON(http.StatusBadRequest, responseJSON{"", "Missing event name"})
 	}
 	ac := appengine.NewContext(c.Request())
 	e := event{}
 	eventKey := datastore.NewKey(ac, "event", eventName, 0, nil)
 	if err := datastore.Get(ac, eventKey, &e); err != nil {
-		return c.JSON(http.StatusBadRequest, errorJSON{err.Error()})
+		return c.JSON(http.StatusBadRequest, responseJSON{"", err.Error()})
 	}
 	// TODO do more validation here like seeing if event is still active
 	comments := c.Form("comments")
@@ -106,19 +106,19 @@ func memberEventSignup(c *echo.Context) error {
 		Filter("Events.Event =", eventName)
 	count, err := q.Count(ac)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, errorJSON{err.Error()})
+		return c.JSON(http.StatusInternalServerError, responseJSON{"", err.Error()})
 	}
 	alreadySignedUp := count != 0 //TODO redo data model to fix this?
 	if alreadySignedUp {
-		return c.JSON(http.StatusBadRequest, errorJSON{"Already signed up"})
+		return c.JSON(http.StatusBadRequest, responseJSON{"", "Already signed up"})
 	} else {
 		eventDetails := eventSignup{e.Title, comments, time.Now()}
 		m.Events = append(m.Events, eventDetails)
 		_, err := datastore.Put(ac, k, &m)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, errorJSON{err.Error()})
+			return c.JSON(http.StatusInternalServerError, responseJSON{"", err.Error()})
 		}
-		return c.NoContent(http.StatusOK)
+		return c.JSON(http.StatusOK, responseJSON{"Signed up for event", ""})
 	}
 }
 
@@ -133,7 +133,7 @@ func allEvents(c *echo.Context) error {
 	var events []event
 	_, err := q.GetAll(ac, &events)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, errorJSON{err.Error()})
+		return c.JSON(http.StatusInternalServerError, responseJSON{"", err.Error()})
 	}
 
 	return c.JSON(http.StatusOK, events)
@@ -143,7 +143,7 @@ func userEvents(c *echo.Context) error {
 	ac := appengine.NewContext(c.Request())
 	m, _ := getOrCreateMember(ac)
 	if m.Events == nil || len(m.Events) == 0 {
-		c.JSON(http.StatusOK, errorJSON{"no events"})
+		c.JSON(http.StatusOK, responseJSON{"", "no events"})
 	}
 	return c.JSON(http.StatusOK, m.Events)
 }
@@ -176,12 +176,12 @@ func add(c *echo.Context) error {
 
 	//key, err := datastore.Put(ac, datastore.NewIncompleteKey(ac, "member", nil), &m)
 	//if err != nil {
-	//	return c.JSON(http.StatusInternalServerError, errorJSON{err.Error()})
+	//	return c.JSON(http.StatusInternalServerError, responseJSON{"", err.Error()})
 	//}
 
 	//var m2 member
 	//if err = datastore.Get(ac, key, &m2); err != nil {
-	//	return c.JSON(http.StatusInternalServerError, errorJSON{err.Error()})
+	//	return c.JSON(http.StatusInternalServerError, responseJSON{"", err.Error()})
 	//}
 
 	//return c.JSON(http.StatusOK, m2)
@@ -191,7 +191,7 @@ func add(c *echo.Context) error {
 	key := datastore.NewKey(ac, "event", e.Title, 0, nil)
 	_, err := datastore.Put(ac, key, &e)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, errorJSON{err.Error()})
+		return c.JSON(http.StatusInternalServerError, responseJSON{"", err.Error()})
 	}
 	return c.JSON(http.StatusOK, e)
 }
