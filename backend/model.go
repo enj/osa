@@ -107,6 +107,8 @@ type logData struct {
 }
 
 type responseJSON struct {
-	Message string `json:"message,omitempty"`
-	Error   string `json:"error,omitempty"`
+	Message string      `json:"message,omitempty"`
+	Error   string      `json:"error,omitempty"`
+	ID      int64       `json:"id,omitempty"`
+	Entity  interface{} `json:"entity,omitempty"`
 }

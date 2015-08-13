@@ -21,6 +21,10 @@ handlers:
   script: _go_app
   login: optional
 
+- url: /api/v1.0/create_event
+  script: _go_app
+  login: admin
+
 - url: /api/.*
   script: _go_app
   login: required
@@ -32,4 +36,3 @@ handlers:
 - url: /
   static_files: frontend/index.html
   upload: frontend/index\.html
-
