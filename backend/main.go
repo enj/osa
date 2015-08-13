@@ -132,7 +132,7 @@ func memberEventSignup(c *echo.Context) error {
 	if count == 1 {
 		return c.JSON(http.StatusBadRequest, responseJSON{"", "Already signed up"})
 	} else {
-		eventSignupDetails := eventSignup{eventName, comments, time.Now()}
+		eventSignupDetails := eventSignup{comments, time.Now()}
 		_, err = datastore.Put(ac, eventSignupKey, &eventSignupDetails)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, responseJSON{"", err.Error()})
@@ -162,14 +162,19 @@ func userEvents(c *echo.Context) error {
 	ac := appengine.NewContext(c.Request())
 	k, _ := getOrCreateMember(ac, nil) //Don't need to check for DB errors when m is nil
 
-	// TODO turn this into a query that actually gets the events, not the signups
-	// the signups should be used as a key search
-	// Determine how to do that efficiently
-	// Then remove the EventTitle from the signup
-	var events []eventSignup
-	q := datastore.NewQuery("event_signup").Ancestor(k)
-	_, err := q.GetAll(ac, &events)
+	q := datastore.NewQuery("event_signup").Ancestor(k).KeysOnly()
+	eventSignupKeys, err := q.GetAll(ac, nil)
 	if err != nil {
+		return c.JSON(http.StatusInternalServerError, responseJSON{"", err.Error()})
+	}
+
+	var eventKeys []*datastore.Key
+	for _, eventSignupKey := range eventSignupKeys {
+		eventKeys = append(eventKeys, datastore.NewKey(ac, "event", eventSignupKey.StringID(), 0, nil))
+	}
+
+	events := make([]event, len(eventKeys))
+	if err = datastore.GetMulti(ac, eventKeys, events); err != nil {
 		return c.JSON(http.StatusInternalServerError, responseJSON{"", err.Error()})
 	}
 

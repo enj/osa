@@ -97,11 +97,8 @@ type timeRange struct {
 }
 
 type eventSignup struct {
-	// Same as key
-	// Makes it easier to display all event signups
-	EventTitle string
-	Comments   string
-	Time       time.Time
+	Comments string
+	Time     time.Time
 }
 
 type logData struct {
