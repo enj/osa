@@ -5,16 +5,25 @@ api_version: go1
 
 handlers:
 
-- url: /api/v1.0/event_signup
+- url: /api/v1.0/members
   script: _go_app
-  login: required
+  login: optional
 
-- url: /api/v1.0/user_events
+- url: /api/v1.0/events
   script: _go_app
-  login: required
+  login: optional
+
+- url: /api/v1.0/login
+  script: _go_app
+  login: optional
+
+- url: /api/v1.0/logout
+  script: _go_app
+  login: optional
 
 - url: /api/.*
   script: _go_app
+  login: required
 
 - url: /(.+)
   static_files: frontend/\1
@@ -23,3 +32,4 @@ handlers:
 - url: /
   static_files: frontend/index.html
   upload: frontend/index\.html
+
