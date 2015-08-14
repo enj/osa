@@ -17,8 +17,6 @@ type family struct {
 }
 
 type event struct {
-	// Same as key
-	// Makes its easier to display all events
 	Title       string
 	Description string
 	Location    location
