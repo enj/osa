@@ -2,111 +2,110 @@ package main
 
 import (
 	"time"
+
+	"google.golang.org/appengine/datastore"
 )
 
-type family struct {
-	// Same as key
-	// Makes it easier to display all families
-	Name    string
-	Keyword string
-	Email   string
-	Login   string
-	Hash    string
-	Active  bool
-	Log     logData
+type Family struct {
+	Key      *datastore.Key `json:"id" datastore:"-"`
+	Name     string         `json:"name" endpoints:"req"`
+	Keyword  string         `json:"keyword" endpoints:"req"`
+	Email    string         `json:"email" endpoints:"req"`
+	Login    string         `json:"login" endpoints:"req"`
+	Password string         `json:"password" datastore:"-" endpoints:"req"`
+	Hash     string         `json:"-"`
+	Salt     string         `json:"-"`
+	Active   bool           `json:"-"`
+	Log      LogData        `json:"-"`
 }
 
-type event struct {
-	Title       string
-	Description string
-	Location    location
-	Duration    timeRange
-	Enroll      time.Time
-	Log         logData
+type Event struct {
+	Key         *datastore.Key `json:"id" datastore:"-"`
+	Title       string         `json:"title" endpoints:"req"`
+	Description string         `json:"description" endpoints:"req"`
+	Location    Location       `json:"location" endpoints:"req"`
+	Duration    TimeRange      `json:"duration" endpoints:"req"`
+	EnrollBy    time.Time      `json:"enrollBy" endpoints:"req"`
+	Log         LogData        `json:"-"`
 }
 
-type member struct {
+type Member struct {
+	Key *datastore.Key `json:"id" datastore:"-"`
 	//TODO figure out how to make ancestor
 	//May be an issue since this can't be changed after creation
-	//Family       string
-	Primary      bool
-	Active       bool
-	Gender       bool
-	Relationship string
-	Birthday     time.Time
-	Modified     time.Time
-	Name         name
-	Contact      contact
-	//Events       []eventSignup
-	Office []officeBearer
+	//FamilyKey *datastore.Key `json:"familyID"`
+	Primary      bool           `json:"-"`
+	Active       bool           `json:"-"`
+	Gender       string         `json:"gender,omitempty"`
+	Relationship string         `json:"relationship" endpoints:"req"`
+	Birthday     time.Time      `json:"birthday,omitempty"`
+	Name         Name           `json:"name" endpoints:"req"`
+	Contact      Contact        `json:"contact" endpoints:"req"`
+	Office       []OfficeBearer `json:"-"`
+	Log          LogData        `json:"-"`
 }
 
-type name struct {
-	Title  string
-	First  string
-	Middle string
-	Last   string
+type Name struct {
+	Title  string `json:"title,omitempty"`
+	First  string `json:"first" endpoints:"req"`
+	Middle string `json:"middle,omitempty"`
+	Last   string `json:"last" endpoints:"req"`
 }
 
-type contact struct {
+type Contact struct {
 	Email struct {
-		Primary     string
-		Alternative string
-	}
-	Phone   []phone
-	Address []address
+		Primary     string `json:"primary" endpoints:"req"`
+		Alternative string `json:"alternative,omitempty"`
+	} `json:"email" endpoints:"req"`
+	Phone   []Phone   `json:"phone,omitempty"`
+	Address []Address `json:"address,omitempty"`
 }
 
-type phone struct {
+type Phone struct {
 	Type struct {
 		// work, home, etc
-		Contact string
+		Contact string `json:"contact" endpoints:"req"`
 		// mobile, cell, fax, etc
-		Phone string
-	}
-	Number string
+		Phone string `json:"phone" endpoints:"req"`
+	} `json:"type" endpoints:"req"`
+	Number string `json:"number" endpoints:"req"`
 }
 
-type address struct {
-	Name     string
-	Type     string
-	Location location
+type Address struct {
+	Name     string   `json:"name" endpoints:"req"`
+	Type     string   `json:"type" endpoints:"req"`
+	Location Location `json:"location" endpoints:"req"`
 }
 
-type location struct {
+type Location struct {
 	Line struct {
-		One string
-		Two string
-	}
-	City    string
-	State   string
-	Zip     string
-	Country string
+		One   string `json:"one" endpoints:"req"`
+		Two   string `json:"two,omitempty"`
+		Three string `json:"three,omitempty"`
+	} `json:"line" endpoints:"req"`
+	City    string `json:"city" endpoints:"req"`
+	State   string `json:"state" endpoints:"req"`
+	Zip     string `json:"zip" endpoints:"req"`
+	Country string `json:"country" endpoints:"req"`
 }
 
-type officeBearer struct {
-	Type string
-	Term timeRange
+type OfficeBearer struct {
+	Type string    `json:"type" endpoints:"req"`
+	Term timeRange `json:"term" endpoints:"req"`
 }
 
-type timeRange struct {
-	Start time.Time
-	End   time.Time
+type TimeRange struct {
+	Start time.Time `json:"start" endpoints:"req"`
+	End   time.Time `json:"end" endpoints:"req"`
 }
 
-type eventSignup struct {
-	Comments string
-	Time     time.Time
+type EventSignup struct {
+	EventKey *datastore.Key `json:"eventID" endpoints:"req"`
+	Comments string         `json:"comments,omitempty" datastore:",noindex"`
+	Time     time.Time      `json:"-"`
 }
 
-type logData struct {
-	Modified   time.Time
-	ModifiedBy string
-}
-
-type responseJSON struct {
-	Message string      `json:"message,omitempty"`
-	Error   string      `json:"error,omitempty"`
-	ID      int64       `json:"id,omitempty"`
-	Entity  interface{} `json:"entity,omitempty"`
+type LogData struct {
+	Modified   time.Time      `json:"-"`
+	ModifiedBy *datastore.Key `json:"-"`
 }
