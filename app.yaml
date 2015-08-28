@@ -1,33 +1,14 @@
 application: osa-app
-version: alpha-001
+version: alpha-002
 runtime: go
 api_version: go1
+threadsafe: true
 
 handlers:
 
-- url: /api/v1.0/members
+# Needed for Cloud Endpoints
+- url: /_ah/spi/.*
   script: _go_app
-  login: optional
-
-- url: /api/v1.0/events
-  script: _go_app
-  login: optional
-
-- url: /api/v1.0/login
-  script: _go_app
-  login: optional
-
-- url: /api/v1.0/logout
-  script: _go_app
-  login: optional
-
-- url: /api/v1.0/create_event
-  script: _go_app
-  login: admin
-
-- url: /api/.*
-  script: _go_app
-  login: required
 
 - url: /(.+)
   static_files: frontend/\1

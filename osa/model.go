@@ -1,4 +1,4 @@
-package main
+package osa
 
 import (
 	"time"
@@ -77,21 +77,23 @@ type Address struct {
 	Location Location `json:"location" endpoints:"req"`
 }
 
+type AddressLine struct {
+	One   string `json:"one" endpoints:"req"`
+	Two   string `json:"two,omitempty"`
+	Three string `json:"three,omitempty"`
+}
+
 type Location struct {
-	Line struct {
-		One   string `json:"one" endpoints:"req"`
-		Two   string `json:"two,omitempty"`
-		Three string `json:"three,omitempty"`
-	} `json:"line" endpoints:"req"`
-	City    string `json:"city" endpoints:"req"`
-	State   string `json:"state" endpoints:"req"`
-	Zip     string `json:"zip" endpoints:"req"`
-	Country string `json:"country" endpoints:"req"`
+	Line    AddressLine `json:"line" endpoints:"req"`
+	City    string      `json:"city" endpoints:"req"`
+	State   string      `json:"state" endpoints:"req"`
+	Zip     string      `json:"zip" endpoints:"req"`
+	Country string      `json:"country" endpoints:"req"`
 }
 
 type OfficeBearer struct {
 	Type string    `json:"type" endpoints:"req"`
-	Term timeRange `json:"term" endpoints:"req"`
+	Term TimeRange `json:"term" endpoints:"req"`
 }
 
 type TimeRange struct {
@@ -108,4 +110,15 @@ type EventSignup struct {
 type LogData struct {
 	Modified   time.Time      `json:"-"`
 	ModifiedBy *datastore.Key `json:"-"`
+}
+
+type EventsList struct {
+	Events []*Event `json:"events"`
+}
+
+type EventsListReq struct {
+	Limit int `json:"limit" endpoints:"d=10,min=1,max=20,desc=The number of events to list."`
+}
+
+type EventsService struct {
 }
