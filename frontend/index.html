@@ -1,54 +1,49 @@
 <!DOCTYPE html>
 <html>
-<script src= "https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.min.js"></script>
+<head>
+    <title>Events API</title>
+    <script async src="static/js/base.js"></script>
+    <link rel="stylesheet" href="static/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="static/bootstrap/css/bootstrap-responsive.css">
+    <link rel="stylesheet" href="static/css/base.css">
+</head>
 <body>
-
-    <div ng-app="osa-app" ng-controller="members">
-
-        <ul>
-            <li ng-repeat="x in names">
-	        {{ x.Name.First + " " + x.Name.Last }}
-		<br/>
-		{{ x.Contact.Email.Primary }}
-            </li>
-        </ul>
-
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container">
+            <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="brand" href="#">List and create events</a>
+            <div class="nav-collapse collapse pull-right">
+                <a href="javascript:void(0);" class="btn" id="signinButton">Sign in</a>
+            </div>
+        </div>
     </div>
+</div>
+<div class="container">
+    <form onsubmit="return false">
+        <h2>List Events</h2>
+        <div><input id="listEvents" type="submit" class="btn btn-small" value="Submit"></div>
+    </form>
+
+    <form onsubmit="return false">
+        <h2>Add Event</h2>
+        <div><label for="eventTitle">Title:</label><input id="eventTitle" /></div>
+        <div><label for="description">Description:</label><input id="description" /></div>
+        <div><input id="addEvent" type="submit" disabled class="btn btn-small" value="Submit"></div>
+    </form>
+
+    <output id="outputLog"></output>
 
     <script>
-        var app = angular.module("osa-app", []);
-        app.controller("members", function($scope, $http, $window) {
-
-            $http.get("api/v1.0/members")
-              .then( function(response) {
-                // this callback will be called asynchronously
-                // when the response is available
-
-                if (typeof response.data !== "object") {
-                    $window.location = "/api/v1.0/login?continue=" + $window.location.pathname;
-                    return
-                }
-
-                $scope.names = response.data;
-
-              }, function(response) {
-                // called asynchronously if an error occurs
-                // or server returns response with an error status.
-                    $window.location = "/api/v1.0/login?continue=" + $window.location.pathname;
-              });
-
-        });
+        function init() {
+            osa.api.init('//' + window.location.host + '/_ah/api');
+        }
     </script>
-
-<form action="/api/v1.0/event_signup" method="POST">
-Event:<br>
-<input type="text" name="event" value="Awesome Event">
-<br>
-Comments:<br>
-<input type="text" name="comments" value="I am looking forward to it!">
-<br><br>
-<input type="submit" value="Submit">
-</form>
-
+    <script src="https://apis.google.com/js/client.js?onload=init"></script>
+</div>
 </body>
 </html>
