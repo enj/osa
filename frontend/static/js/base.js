@@ -16,6 +16,12 @@ osa.api = osa.api || {};
 /** Events API namespace. */
 osa.api.events = osa.api.events || {};
 
+/** Member API namespace. */
+osa.api.member = osa.api.member || {};
+
+/** UI namespace. */
+osa.api.ui = osa.api.ui || {};
+
 /**
  * Client ID of OSA app
  * @type {string}
@@ -45,6 +51,8 @@ osa.api.userAuthed = function() {
       osa.api.signedIn = true;
       document.querySelector('#signinButton').textContent = 'Sign out';
       document.querySelector('#addEvent').disabled = false;
+      document.querySelector('#updateMember').disabled = false;
+      osa.api.member.current();
     }
   });
 };
@@ -61,17 +69,28 @@ osa.api.signin = function(mode, callback) {
 };
 
 /**
- * Presents the user with the authorization popup.
+ * Clears auth token and resets UI when user logs out.
+ */
+osa.api.signout = function() {
+  gapi.auth.setToken(null);
+  gapi.auth.signOut();
+  osa.api.signedIn = false;
+  document.querySelector('#signinButton').textContent = 'Sign in';
+  document.querySelector('#addEvent').disabled = true;
+  document.querySelector('#updateMember').disabled = true;
+  osa.api.member.print();
+  osa.api.ui.cleanLog();
+}
+
+/**
+ * Presents the user with the authorization popup when signing in.
+ * Cleans up when user signs out.
  */
 osa.api.auth = function() {
   if (!osa.api.signedIn) { // Sign in
     osa.api.signin(false, osa.api.userAuthed);
   } else { // Sign out
-    osa.api.signedIn = false;
-    document.querySelector('#signinButton').textContent = 'Sign in';
-    document.querySelector('#addEvent').disabled = true;
-    gapi.auth.setToken(null);
-    gapi.auth.signOut();
+    osa.api.signout();
   }
 };
 
@@ -93,7 +112,7 @@ osa.api.events.print = function(event) {
  * Prints a message to the output log.
  * param {string} msg Message to print
  */
-osa.api.events.msg = function(msg) {
+osa.api.ui.msg = function(msg) {
   var element = document.createElement('div');
   element.classList.add('p');
   element.innerHTML = msg;
@@ -104,7 +123,7 @@ osa.api.events.msg = function(msg) {
  * Deletes all children of a specified node
  * @param {Object} node The node to delete children of
  */
-clean = function(node) {
+osa.api.ui.clean = function(node) {
   var fc = node.firstChild;
   while( fc ) {
       node.removeChild( fc );
@@ -115,56 +134,121 @@ clean = function(node) {
 /**
  * Removes all items in the output log
  */
-cleanLog = function() {
-  clean(document.querySelector('#outputLog'))
+osa.api.ui.cleanLog = function() {
+  osa.api.ui.clean(document.querySelector('#outputLog'))
 }
 
 /**
  * Lists events via the API.
  */
-osa.api.events.listEvents = function() {
+osa.api.events.list = function() {
   gapi.client.events.events.list().execute(
-      function(resp) {
-        if (!resp.code) {
-          cleanLog();
-          resp.events = resp.events || [];
-          for (var i = 0; i < resp.events.length; i++) {
-            osa.api.events.print(resp.events[i]);
-          }
+    function(resp) {
+      osa.api.ui.cleanLog();
+      if (!resp.code) {
+        resp.events = resp.events || [];
+        if (resp.events.length == 0) {
+          osa.api.ui.msg('No events found.');
+          return;
         }
-      });
+        for (var i = 0; i < resp.events.length; i++) {
+          osa.api.events.print(resp.events[i]);
+        }
+      } else {
+        osa.api.ui.msg('Error: ' + resp.message);
+      }
+    }
+  );
 };
 
 /**
  * Adds a new event.
- * @param {string} title the title of the event
- * @param {string} count a description of the event
+ * @param {Object} event the even object to add
  */
-osa.api.events.addEvent = function(title, description) {
-  gapi.client.events.events.add({
-      'title': title,
-      'description': description
-    }).execute(function(resp) {
+osa.api.events.add = function(event) {
+  gapi.client.events.events.add(event).execute(
+    function(resp) {
+      osa.api.ui.cleanLog();
       if (!resp.code) {
-        cleanLog();
-        osa.api.events.msg('Successively added event!');
+        osa.api.ui.msg('Successively added event!');
+      } else {
+        osa.api.ui.msg('Error: ' + resp.message);
       }
     });
 };
 
 /**
+ * Fetches the user's profile.
+ */
+osa.api.member.current = function() {
+  gapi.client.member.member.current().execute(
+    function(resp) {
+      osa.api.member.print(resp);
+    }
+  );
+};
+
+/**
+ * Updates the user's profile with the member object
+ * @param {Object} member the member object to update with
+ */
+osa.api.member.update = function(member) {
+  gapi.client.member.member.update(member).execute(
+    function(resp) {
+      osa.api.ui.cleanLog();
+      if (!resp.code) {
+        osa.api.ui.msg('Successively updated profile!');
+      } else {
+        osa.api.ui.msg('Error: ' + resp.message);
+      }
+    }
+  );
+};
+
+/**
+ * Loads the resp as a member object if it is valid
+ * @param {Object} resp the member object or error response
+ */
+osa.api.member.print = function(resp) {
+  var first = document.querySelector('#firstName');
+  var last = document.querySelector('#lastName');
+  var rel = document.querySelector('#relationship');
+  if (resp && !resp.code) {
+    first.value = resp.name.first;
+    last.value = resp.name.last;
+    rel.value = resp.relationship;
+  } else {
+    first.value = '';
+    last.value = '';
+    rel.value = '';
+  }
+}
+
+/**
  * Enables the button callbacks in the UI.
  */
-osa.api.events.enableButtons = function() {
+osa.api.ui.enableButtons = function() {
   var listEvents = document.querySelector('#listEvents');
   listEvents.addEventListener('click',
-      osa.api.events.listEvents);
+      osa.api.events.list);
 
   var addEvent = document.querySelector('#addEvent');
   addEvent.addEventListener('click', function() {
-    osa.api.events.addEvent(
-        document.querySelector('#eventTitle').value,
-        document.querySelector('#description').value);
+    osa.api.events.add({
+      'title': document.querySelector('#eventTitle').value,
+      'description': document.querySelector('#description').value
+    });
+  });
+
+  var updateMember = document.querySelector('#updateMember');
+  updateMember.addEventListener('click', function() {
+    osa.api.member.update({
+      'relationship': document.querySelector('#relationship').value,
+      'name': {
+        'first': document.querySelector('#firstName').value,
+        'last': document.querySelector('#lastName').value
+      }
+    });
   });
 
   var signinButton = document.querySelector('#signinButton');
@@ -181,12 +265,13 @@ osa.api.init = function(apiRoot) {
   var apisToLoad;
   var callback = function() {
     if (--apisToLoad == 0) {
-      osa.api.events.enableButtons();
+      osa.api.ui.enableButtons();
       osa.api.signin(true, osa.api.userAuthed);
     }
   }
 
-  apisToLoad = 2; // must match number of calls to gapi.client.load()
+  apisToLoad = 3; // must match number of calls to gapi.client.load()
   gapi.client.load('events', 'v1', callback, apiRoot);
+  gapi.client.load('member', 'v1', callback, apiRoot);
   gapi.client.load('oauth2', 'v2', callback);
 };

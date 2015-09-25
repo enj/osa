@@ -84,6 +84,35 @@ func (es *EventsService) Add(c context.Context, e *Event) error {
 	return err
 }
 
+func (ms *MemberService) Current(c context.Context) (*Member, error) {
+
+	u, err := getCurrentUser(c)
+	if err != nil {
+		return nil, err
+	}
+
+	m := &Member{}
+	k := datastore.NewKey(c, MemberEntity, u.ID, 0, nil)
+	if err = datastore.Get(c, k, m); err != nil {
+		return nil, err
+	}
+
+	return m, nil
+}
+
+func (ms *MemberService) Update(c context.Context, m *Member) error {
+
+	u, err := getCurrentUser(c)
+	if err != nil {
+		return err
+	}
+
+	// TODO maybe do some type of partial merge here instead of full replace
+	k := datastore.NewKey(c, MemberEntity, u.ID, 0, nil)
+	_, err = datastore.Put(c, k, m)
+	return err
+}
+
 func registerServiceHelper(rpc *endpoints.RPCService, f, path, httpMethod, name, desc string) {
 	method := rpc.MethodByName(f)
 	if method == nil {
@@ -94,12 +123,20 @@ func registerServiceHelper(rpc *endpoints.RPCService, f, path, httpMethod, name,
 	info.Scopes, info.ClientIds, info.Audiences = scopes, clientIds, audiences
 }
 
-func RegisterService() (*endpoints.RPCService, error) {
-	rpcService, err := endpoints.RegisterService(&EventsService{}, "events", "v1", "Events API", true)
+func RegisterService() ([]*endpoints.RPCService, error) {
+	es, err := endpoints.RegisterService(&EventsService{}, "events", "v1", "Events API", true)
 	if err != nil {
 		return nil, err
 	}
-	registerServiceHelper(rpcService, "List", "list", "GET", "events.list", "List most recent events.")
-	registerServiceHelper(rpcService, "Add", "add", "PUT", "events.add", "Add an event.")
-	return rpcService, nil
+	registerServiceHelper(es, "List", "list", "GET", "events.list", "List most recent events.")
+	registerServiceHelper(es, "Add", "add", "PUT", "events.add", "Add an event.")
+
+	ms, err := endpoints.RegisterService(&MemberService{}, "member", "v1", "Member API", true)
+	if err != nil {
+		return nil, err
+	}
+	registerServiceHelper(ms, "Current", "current", "GET", "member.current", "Get the current user's profile.")
+	registerServiceHelper(ms, "Update", "update", "PUT", "member.update", "Update the current user's profile.")
+
+	return []*endpoints.RPCService{es, ms}, nil
 }

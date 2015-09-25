@@ -30,7 +30,7 @@ type Event struct {
 }
 
 type Member struct {
-	Key *datastore.Key `json:"id" datastore:"-"`
+	//Key *datastore.Key `json:"id" datastore:"-"`
 	//TODO figure out how to make ancestor
 	//May be an issue since this can't be changed after creation
 	//FamilyKey *datastore.Key `json:"familyID"`
@@ -52,23 +52,23 @@ type Name struct {
 	Last   string `json:"last" endpoints:"req"`
 }
 
+type Email struct {
+	Primary     string `json:"primary" endpoints:"req"`
+	Alternative string `json:"alternative,omitempty"`
+}
+
 type Contact struct {
-	Email struct {
-		Primary     string `json:"primary" endpoints:"req"`
-		Alternative string `json:"alternative,omitempty"`
-	} `json:"email" endpoints:"req"`
+	Email   Email     `json:"email" endpoints:"req"`
 	Phone   []Phone   `json:"phone,omitempty"`
 	Address []Address `json:"address,omitempty"`
 }
 
 type Phone struct {
-	Type struct {
-		// work, home, etc
-		Contact string `json:"contact" endpoints:"req"`
-		// mobile, cell, fax, etc
-		Phone string `json:"phone" endpoints:"req"`
-	} `json:"type" endpoints:"req"`
-	Number string `json:"number" endpoints:"req"`
+	// work, home, etc
+	Contact string `json:"contact" endpoints:"req"`
+	// mobile, cell, fax, etc
+	Type    string `json:"type" endpoints:"req"`
+	Number  string `json:"number" endpoints:"req"`
 }
 
 type Address struct {
@@ -121,4 +121,7 @@ type EventsListReq struct {
 }
 
 type EventsService struct {
+}
+
+type MemberService struct {
 }

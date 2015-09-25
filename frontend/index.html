@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Events API</title>
+    <title>OSA API</title>
     <script async src="static/js/base.js"></script>
     <link rel="stylesheet" href="static/bootstrap/css/bootstrap.css">
     <link rel="stylesheet" href="static/bootstrap/css/bootstrap-responsive.css">
@@ -16,7 +16,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="brand" href="#">List and create events</a>
+            <a class="brand" href="#">OSA API Demo</a>
             <div class="nav-collapse collapse pull-right">
                 <a href="javascript:void(0);" class="btn" id="signinButton">Sign in</a>
             </div>
@@ -34,6 +34,14 @@
         <div><label for="eventTitle">Title:</label><input id="eventTitle" /></div>
         <div><label for="description">Description:</label><input id="description" /></div>
         <div><input id="addEvent" type="submit" disabled class="btn btn-small" value="Submit"></div>
+    </form>
+
+    <form onsubmit="return false">
+        <h2>Profile</h2>
+        <div><label for="firstName">First Name:</label><input id="firstName" /></div>
+        <div><label for="lastName">Last Name:</label><input id="lastName" /></div>
+        <div><label for="relationship">Relationship:</label><input id="relationship" /></div>
+        <div><input id="updateMember" type="submit" disabled class="btn btn-small" value="Submit"></div>
     </form>
 
     <output id="outputLog"></output>
