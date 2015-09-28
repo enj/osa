@@ -9,11 +9,14 @@ handlers:
 # Needed for Cloud Endpoints
 - url: /_ah/spi/.*
   script: _go_app
+  secure: always
 
 - url: /(.+)
   static_files: frontend/\1
   upload: frontend/(.+)
+  secure: always
 
 - url: /
   static_files: frontend/index.html
   upload: frontend/index\.html
+  secure: always
