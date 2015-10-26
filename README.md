@@ -4,3 +4,4 @@ Personal project to explore the design process behind building a REST API. The A
 
 - Demo: https://osa-app.appspot.com
 - API: https://osa-app.appspot.com/_ah/api/explorer
+- Discovery: https://osa-app.appspot.com/_ah/api/discovery/v1/apis
